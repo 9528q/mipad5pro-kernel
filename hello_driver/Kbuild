@@ -1,0 +1,3 @@
+# Kbuild for hello_driver external module
+obj-m := hello_driver.o
+hello_driver-objs := main.o
