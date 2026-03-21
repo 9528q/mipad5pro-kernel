@@ -50,13 +50,16 @@ jobs:
         env:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
-          CC: clang
-          LLVM: 1
-          LLVM_IAS: 1
         run: |
-          # Create include/config/auto.conf (required for external modules)
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang \
-               LLVM=1 LLVM_IAS=1 olddefconfig
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
+
+      - name: Build modpost tool
+        working-directory: kernel-src
+        env:
+          ARCH: arm64
+          CROSS_COMPILE: aarch64-linux-gnu-
+        run: |
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- scripts
 
       - name: Build hello_driver module
         working-directory: kernel-src
@@ -128,14 +131,10 @@ jobs:
         env:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
-          CC: clang
-          LLVM: 1
-          LLVM_IAS: 1
         run: |
           make -j$(nproc) \
                ARCH=arm64 \
                CROSS_COMPILE=aarch64-linux-gnu- \
-               CC=clang LLVM=1 LLVM_IAS=1 \
                Image dtbs modules
         timeout-minutes: 120
 
@@ -187,9 +186,16 @@ jobs:
         env:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
-          LLVM: 0
         run: |
           make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
+
+      - name: Build modpost tool
+        working-directory: kernel-src
+        env:
+          ARCH: arm64
+          CROSS_COMPILE: aarch64-linux-gnu-
+        run: |
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- scripts
 
       - name: Build all modules
         working-directory: kernel-src
