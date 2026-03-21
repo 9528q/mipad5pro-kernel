@@ -63,9 +63,7 @@ jobs:
         env:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
-          CC: clang
-          LLVM: 1
-          LLVM_IAS: 1
+          LLVM: 0
         run: |
           make -C hello_driver modules
 
@@ -189,26 +187,20 @@ jobs:
         env:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
-          CC: clang
-          LLVM: 1
-          LLVM_IAS: 1
+          LLVM: 0
         run: |
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang \
-               LLVM=1 LLVM_IAS=1 olddefconfig
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
 
       - name: Build all modules
         working-directory: kernel-src
         env:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
-          CC: clang
-          LLVM: 1
-          LLVM_IAS: 1
+          LLVM: 0
         run: |
           make -j$(nproc) \
                ARCH=arm64 \
                CROSS_COMPILE=aarch64-linux-gnu- \
-               CC=clang LLVM=1 LLVM_IAS=1 \
                modules
         timeout-minutes: 90
 

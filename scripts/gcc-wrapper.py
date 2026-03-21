@@ -1,4 +1,4 @@
-#! /usr/bin/env python2
+#! /usr/bin/env python3
 # SPDX-License-Identifier: GPL-2.0-only
 # Copyright (c) 2011-2017, 2018 The Linux Foundation. All rights reserved.
 
@@ -28,10 +28,13 @@ ofile = None
 warning_re = re.compile(r'''(.*/|)([^/]+\.[a-z]+:\d+):(\d+:)? warning:''')
 def interpret_warning(line):
     """Decode the message from gcc.  The messages we care about have a filename, and a warning"""
+    # Handle bytes input (Python 3.12+)
+    if isinstance(line, bytes):
+        line = line.decode('utf-8', errors='replace')
     line = line.rstrip('\n')
     m = warning_re.match(line)
     if m and m.group(2) not in allowed_warnings:
-        print "error, forbidden warning:", m.group(2)
+        print("error, forbidden warning:", m.group(2))
 
         # If there is a warning, remove any object if it exists.
         if ofile:
@@ -56,17 +59,22 @@ def run_gcc():
     try:
         proc = subprocess.Popen(args, stderr=subprocess.PIPE)
         for line in proc.stderr:
-            print line,
-            interpret_warning(line)
+            # Handle both Python 2 (str) and Python 3 (bytes) output
+            if isinstance(line, bytes):
+                line_str = line.decode('utf-8', errors='replace')
+            else:
+                line_str = line
+            print(line_str, end='')
+            interpret_warning(line_str)
 
         result = proc.wait()
     except OSError as e:
         result = e.errno
         if result == errno.ENOENT:
-            print args[0] + ':',e.strerror
-            print 'Is your PATH set correctly?'
+            print(args[0] + ':',e.strerror)
+            print('Is your PATH set correctly?')
         else:
-            print ' '.join(args), str(e)
+            print(' '.join(args), str(e))
 
     return result
 

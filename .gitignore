@@ -6,7 +6,6 @@
 *.mod.o
 *.order
 *.symvers
-*.cmd
 *.dtb
 *.dtbo
 *.img

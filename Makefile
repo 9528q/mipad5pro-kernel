@@ -386,6 +386,8 @@ KBUILD_HOSTLDLIBS   := $(HOST_LFS_LIBS) $(HOSTLDLIBS)
 
 # Make variables (CC, etc...)
 CPP		= $(CC) -E
+# Set REAL_CC before LLVM check so it's always available
+REAL_CC		= $(CROSS_COMPILE)gcc
 ifneq ($(LLVM),)
 CC		= clang
 LD		= ld.lld
@@ -397,7 +399,6 @@ READELF		= llvm-readelf
 OBJSIZE		= llvm-size
 STRIP		= llvm-strip
 else
-REAL_CC		= $(CROSS_COMPILE)gcc
 LD		= $(CROSS_COMPILE)ld
 AR		= $(CROSS_COMPILE)ar
 NM		= $(CROSS_COMPILE)nm
