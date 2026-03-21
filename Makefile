@@ -5,6 +5,11 @@ SUBLEVEL = 157
 EXTRAVERSION =
 NAME = "People's Front"
 
+# Set default KERNELRELEASE if not already set by include/config/kernel.release
+ifeq ($(KERNELRELEASE),)
+KERNELRELEASE := $(VERSION).$(PATCHLEVEL).$(SUBLEVEL)$(EXTRAVERSION)-unknown
+endif
+
 # *DOCUMENTATION*
 # To see a list of typical targets execute "make help"
 # More info can be located in ./README
