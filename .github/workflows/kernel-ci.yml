@@ -68,7 +68,7 @@ jobs:
           CROSS_COMPILE: aarch64-linux-gnu-
           LLVM: 0
         run: |
-          make -C hello_driver modules
+          make M=hello_driver ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=0 modules
 
       - name: Verify .ko file
         working-directory: kernel-src
