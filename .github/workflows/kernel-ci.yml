@@ -55,15 +55,6 @@ jobs:
         run: |
           make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=0 olddefconfig
 
-      - name: Prepare kernel build
-        working-directory: kernel-src
-        env:
-          ARCH: arm64
-          CROSS_COMPILE: aarch64-linux-gnu-
-          LLVM: 0
-        run: |
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=0 prepare
-
       - name: Build modpost tool
         working-directory: kernel-src
         env:
@@ -205,15 +196,6 @@ jobs:
           LLVM: 0
         run: |
           make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=0 olddefconfig
-
-      - name: Prepare kernel build
-        working-directory: kernel-src
-        env:
-          ARCH: arm64
-          CROSS_COMPILE: aarch64-linux-gnu-
-          LLVM: 0
-        run: |
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=0 prepare
 
       - name: Build modpost tool
         working-directory: kernel-src
