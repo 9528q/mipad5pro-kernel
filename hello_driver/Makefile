@@ -9,9 +9,8 @@ ifneq ($(KERNELRELEASE),)
     $(MODULE_NAME)-objs := $(RESMAN_GLUE_OBJS) $(RESMAN_CORE_OBJS)
     obj-m := hello_driver.o
 else
-    # Kernel source directory
-    KDIR := $(shell cd "$(dir $(lastword $(MAKEFILE_LIST))).." && pwd)
-    # Current directory
+    # Kernel source directory (always one level up from hello_driver/)
+    KDIR := $(abspath ..)
     PWD := $(shell pwd)
 
 export ARCH := arm64
@@ -19,15 +18,18 @@ export SUBARCH := arm64
 export CROSS_COMPILE := aarch64-linux-gnu-
 export CLANG_TRIPLE := aarch64-linux-gnu-
 export CC := clang
+export LLVM := 1
+export LLVM_IAS := 1
 
 all:
 	@echo "========================================"
 	@echo "Building hello_driver kernel module..."
-	@echo "Kernel: $(KDIR)"
-	@echo "ARCH: $(ARCH)"
+	@echo "Kernel source: $(KDIR)"
+	@echo "Module dir:    $(PWD)"
+	@echo "ARCH:          $(ARCH)"
 	@echo "Cross Compiler: $(CROSS_COMPILE)"
 	@echo "========================================"
-	make -C $(KDIR) M=$(PWD) modules
+	make -C "$(KDIR)" M="$(PWD)" modules
 
 clean:
 	@echo "Cleaning build artifacts..."

@@ -12,7 +12,7 @@ env:
   CROSS_COMPILE: aarch64-linux-gnu-
 
 jobs:
-  # Job 1: Build hello_driver kernel module
+  # ── Job 1: Build hello_driver kernel module ──────────────────────────────
   build-hello-driver:
     runs-on: ubuntu-24.04
     steps:
@@ -37,6 +37,27 @@ jobs:
             llvm \
             kmod
 
+      - name: Configure kernel (arm64 defconfig)
+        working-directory: kernel-src
+        env:
+          ARCH: arm64
+          CROSS_COMPILE: aarch64-linux-gnu-
+        run: |
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- defconfig
+
+      - name: Generate kernel config headers
+        working-directory: kernel-src
+        env:
+          ARCH: arm64
+          CROSS_COMPILE: aarch64-linux-gnu-
+          CC: clang
+          LLVM: 1
+          LLVM_IAS: 1
+        run: |
+          # Create include/config/auto.conf (required for external modules)
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang \
+               LLVM=1 LLVM_IAS=1 olddefconfig
+
       - name: Build hello_driver module
         working-directory: kernel-src
         env:
@@ -46,13 +67,15 @@ jobs:
           LLVM: 1
           LLVM_IAS: 1
         run: |
-          make -C $(pwd)/hello_driver modules
+          make -C hello_driver modules
 
       - name: Verify .ko file
         working-directory: kernel-src
         run: |
-          ls -lh hello_driver/*.ko || echo "No .ko found"
-          file hello_driver/hello_driver.ko 2>/dev/null || echo "file check skipped"
+          ls -lh hello_driver/*.ko
+          file hello_driver/hello_driver.ko || true
+          echo "=== modinfo ==="
+          modinfo hello_driver/hello_driver.ko 2>/dev/null || true
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -62,7 +85,7 @@ jobs:
           retention-days: 30
         if: always()
 
-  # Job 2: Full kernel build (arm64)
+  # ── Job 2: Full kernel build (arm64) ───────────────────────────────────
   build-kernel-arm64:
     runs-on: ubuntu-24.04
     steps:
@@ -100,11 +123,7 @@ jobs:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
         run: |
-          if [ ! -f .config ]; then
-            make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- defconfig
-          else
-            echo "Using existing .config"
-          fi
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- defconfig
 
       - name: Build kernel (arm64)
         working-directory: kernel-src
@@ -115,7 +134,11 @@ jobs:
           LLVM: 1
           LLVM_IAS: 1
         run: |
-          make -j$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang LLVM=1 LLVM_IAS=1 Image dtbs modules
+          make -j$(nproc) \
+               ARCH=arm64 \
+               CROSS_COMPILE=aarch64-linux-gnu- \
+               CC=clang LLVM=1 LLVM_IAS=1 \
+               Image dtbs modules
         timeout-minutes: 120
 
       - name: Upload kernel artifacts
@@ -129,7 +152,7 @@ jobs:
           retention-days: 7
         continue-on-error: true
 
-  # Job 3: Build all kernel modules (arm64)
+  # ── Job 3: Build all kernel modules (arm64) ──────────────────────────────
   build-all-modules:
     runs-on: ubuntu-24.04
     steps:
@@ -159,19 +182,19 @@ jobs:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
         run: |
-          if [ ! -f .config ]; then
-            make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- defconfig
-          fi
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- defconfig
 
-      - name: Enable module support
+      - name: Generate kernel config headers
         working-directory: kernel-src
         env:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
+          CC: clang
+          LLVM: 1
+          LLVM_IAS: 1
         run: |
-          scripts/config --module CONFIG_MODULES
-          scripts/config --enable MODULES
-          yes "" | make oldconfig
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang \
+               LLVM=1 LLVM_IAS=1 olddefconfig
 
       - name: Build all modules
         working-directory: kernel-src
@@ -182,14 +205,18 @@ jobs:
           LLVM: 1
           LLVM_IAS: 1
         run: |
-          make -j$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang LLVM=1 LLVM_IAS=1 modules
+          make -j$(nproc) \
+               ARCH=arm64 \
+               CROSS_COMPILE=aarch64-linux-gnu- \
+               CC=clang LLVM=1 LLVM_IAS=1 \
+               modules
         timeout-minutes: 90
 
       - name: Collect .ko files
         working-directory: kernel-src
         run: |
           mkdir -p artifacts-arm64
-          find . -name "*.ko" -exec cp {} artifacts-arm64/ \;
+          find . -name "*.ko" ! -path "./artifacts-arm64/*" -exec cp {} artifacts-arm64/ \;
           echo "Total modules built: $(find artifacts-arm64 -name '*.ko' | wc -l)"
           ls -lh artifacts-arm64/
 
