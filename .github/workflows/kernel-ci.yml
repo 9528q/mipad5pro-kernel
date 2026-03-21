@@ -42,32 +42,36 @@ jobs:
         env:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
+          LLVM: 0
         run: |
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- defconfig
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=0 defconfig
 
       - name: Generate kernel config headers
         working-directory: kernel-src
         env:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
+          LLVM: 0
         run: |
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=0 olddefconfig
 
       - name: Prepare kernel build
         working-directory: kernel-src
         env:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
+          LLVM: 0
         run: |
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- prepare
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=0 prepare
 
       - name: Build modpost tool
         working-directory: kernel-src
         env:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
+          LLVM: 0
         run: |
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- scripts
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=0 scripts
 
       - name: Build hello_driver module
         working-directory: kernel-src
@@ -131,18 +135,21 @@ jobs:
         env:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
+          LLVM: 0
         run: |
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- defconfig
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=0 defconfig
 
       - name: Build kernel (arm64)
         working-directory: kernel-src
         env:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
+          LLVM: 0
         run: |
           make -j$(nproc) \
                ARCH=arm64 \
                CROSS_COMPILE=aarch64-linux-gnu- \
+               LLVM=0 \
                Image dtbs modules
         timeout-minutes: 120
 
@@ -186,32 +193,36 @@ jobs:
         env:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
+          LLVM: 0
         run: |
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- defconfig
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=0 defconfig
 
       - name: Generate kernel config headers
         working-directory: kernel-src
         env:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
+          LLVM: 0
         run: |
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=0 olddefconfig
 
       - name: Prepare kernel build
         working-directory: kernel-src
         env:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
+          LLVM: 0
         run: |
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- prepare
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=0 prepare
 
       - name: Build modpost tool
         working-directory: kernel-src
         env:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
+          LLVM: 0
         run: |
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- scripts
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=0 scripts
 
       - name: Build all modules
         working-directory: kernel-src
@@ -223,6 +234,7 @@ jobs:
           make -j$(nproc) \
                ARCH=arm64 \
                CROSS_COMPILE=aarch64-linux-gnu- \
+               LLVM=0 \
                modules
         timeout-minutes: 90
 
