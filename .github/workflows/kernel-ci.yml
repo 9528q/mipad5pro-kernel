@@ -1,0 +1,201 @@
+name: Android Kernel CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+env:
+  KERNEL_VERSION: 4.19.157
+  ARCH: arm64
+  CROSS_COMPILE: aarch64-linux-gnu-
+
+jobs:
+  # Job 1: Build hello_driver kernel module
+  build-hello-driver:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout kernel source
+        uses: actions/checkout@v4
+        with:
+          path: kernel-src
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            gcc-aarch64-linux-gnu \
+            g++-aarch64-linux-gnu \
+            libncurses-dev \
+            flex \
+            bison \
+            libelf-dev \
+            libssl-dev \
+            bc \
+            clang \
+            llvm \
+            kmod
+
+      - name: Build hello_driver module
+        working-directory: kernel-src
+        env:
+          ARCH: arm64
+          CROSS_COMPILE: aarch64-linux-gnu-
+          CC: clang
+          LLVM: 1
+          LLVM_IAS: 1
+        run: |
+          make -C $(pwd)/hello_driver modules
+
+      - name: Verify .ko file
+        working-directory: kernel-src
+        run: |
+          ls -lh hello_driver/*.ko || echo "No .ko found"
+          file hello_driver/hello_driver.ko 2>/dev/null || echo "file check skipped"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: hello_driver-ko
+          path: kernel-src/hello_driver/*.ko
+          retention-days: 30
+        if: always()
+
+  # Job 2: Full kernel build (arm64)
+  build-kernel-arm64:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout kernel source
+        uses: actions/checkout@v4
+        with:
+          path: kernel-src
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            gcc-aarch64-linux-gnu \
+            g++-aarch64-linux-gnu \
+            gcc-arm-linux-gnueabi \
+            g++-arm-linux-gnueabi \
+            libncurses-dev \
+            flex \
+            bison \
+            libelf-dev \
+            libssl-dev \
+            bc \
+            clang \
+            llvm \
+            llvm-dev \
+            lld \
+            python3 \
+            cpio \
+            kmod \
+            zstd
+
+      - name: Configure kernel for arm64
+        working-directory: kernel-src
+        env:
+          ARCH: arm64
+          CROSS_COMPILE: aarch64-linux-gnu-
+        run: |
+          if [ ! -f .config ]; then
+            make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- defconfig
+          else
+            echo "Using existing .config"
+          fi
+
+      - name: Build kernel (arm64)
+        working-directory: kernel-src
+        env:
+          ARCH: arm64
+          CROSS_COMPILE: aarch64-linux-gnu-
+          CC: clang
+          LLVM: 1
+          LLVM_IAS: 1
+        run: |
+          make -j$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang LLVM=1 LLVM_IAS=1 Image dtbs modules
+        timeout-minutes: 120
+
+      - name: Upload kernel artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-artifacts-arm64
+          path: |
+            kernel-src/arch/arm64/boot/Image
+            kernel-src/vmlinux
+            kernel-src/System.map
+          retention-days: 7
+        continue-on-error: true
+
+  # Job 3: Build all kernel modules (arm64)
+  build-all-modules:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout kernel source
+        uses: actions/checkout@v4
+        with:
+          path: kernel-src
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            gcc-aarch64-linux-gnu \
+            libncurses-dev \
+            flex \
+            bison \
+            libelf-dev \
+            libssl-dev \
+            bc \
+            clang \
+            llvm \
+            kmod
+
+      - name: Configure kernel
+        working-directory: kernel-src
+        env:
+          ARCH: arm64
+          CROSS_COMPILE: aarch64-linux-gnu-
+        run: |
+          if [ ! -f .config ]; then
+            make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- defconfig
+          fi
+
+      - name: Enable module support
+        working-directory: kernel-src
+        env:
+          ARCH: arm64
+          CROSS_COMPILE: aarch64-linux-gnu-
+        run: |
+          scripts/config --module CONFIG_MODULES
+          scripts/config --enable MODULES
+          yes "" | make oldconfig
+
+      - name: Build all modules
+        working-directory: kernel-src
+        env:
+          ARCH: arm64
+          CROSS_COMPILE: aarch64-linux-gnu-
+          CC: clang
+          LLVM: 1
+          LLVM_IAS: 1
+        run: |
+          make -j$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang LLVM=1 LLVM_IAS=1 modules
+        timeout-minutes: 90
+
+      - name: Collect .ko files
+        working-directory: kernel-src
+        run: |
+          mkdir -p artifacts-arm64
+          find . -name "*.ko" -exec cp {} artifacts-arm64/ \;
+          echo "Total modules built: $(find artifacts-arm64 -name '*.ko' | wc -l)"
+          ls -lh artifacts-arm64/
+
+      - name: Upload modules artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-modules-arm64
+          path: kernel-src/artifacts-arm64/
+          retention-days: 7

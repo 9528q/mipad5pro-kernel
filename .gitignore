@@ -1,0 +1,68 @@
+# Kernel build artifacts - NEVER commit these
+*.o
+*.ko
+*.mod
+*.mod.c
+*.mod.o
+*.order
+*.symvers
+*.cmd
+*.dtb
+*.dtbo
+*.img
+
+# Module build files
+.tmp_versions/
+Module.symvers
+modules.order
+modules.builtin
+
+# Build output directories
+build/
+out/
+dist/
+artifacts-*/
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.*.swp
+
+# Kernel-specific artifacts
+vmlinux
+vmlinux.o
+System.map
+*.log
+*.tar
+*.tar.gz
+*.tar.bz2
+
+# cscope files
+cscope.*
+ncscope.*
+
+# Patch files
+*.patch
+*.rej
+
+# GCC backward compatibility
+*.dwo
+*.dwp
+*.so
+
+# Kbuild output
+ .cflags
+ .stdarg
+
+# Per-file .o.cmd files
+# Keep important config files
+!.config
+!.config.old
+!.gitattributes
+!.gitignore
+!.mailmap
