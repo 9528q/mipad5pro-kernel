@@ -53,6 +53,14 @@ jobs:
         run: |
           make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
 
+      - name: Prepare kernel build
+        working-directory: kernel-src
+        env:
+          ARCH: arm64
+          CROSS_COMPILE: aarch64-linux-gnu-
+        run: |
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- prepare
+
       - name: Build modpost tool
         working-directory: kernel-src
         env:
@@ -68,7 +76,7 @@ jobs:
           CROSS_COMPILE: aarch64-linux-gnu-
           LLVM: 0
         run: |
-          make M=hello_driver ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=0 modules
+          make -C hello_driver modules
 
       - name: Verify .ko file
         working-directory: kernel-src
@@ -188,6 +196,14 @@ jobs:
           CROSS_COMPILE: aarch64-linux-gnu-
         run: |
           make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
+
+      - name: Prepare kernel build
+        working-directory: kernel-src
+        env:
+          ARCH: arm64
+          CROSS_COMPILE: aarch64-linux-gnu-
+        run: |
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- prepare
 
       - name: Build modpost tool
         working-directory: kernel-src
