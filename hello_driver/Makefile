@@ -18,6 +18,9 @@ export SUBARCH := arm64
 export CROSS_COMPILE := aarch64-linux-gnu-
 export LLVM := 0
 export CC := aarch64-linux-gnu-gcc
+export LD := aarch64-linux-gnu-ld
+export AR := aarch64-linux-gnu-ar
+export NM := aarch64-linux-gnu-nm
 
 all modules:
 	@echo "========================================"
