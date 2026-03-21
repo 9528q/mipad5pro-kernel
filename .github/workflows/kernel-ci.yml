@@ -42,46 +42,42 @@ jobs:
         env:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
+          CC: clang
           LLVM: 1
           LLVM_IAS: 1
         run: |
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=1 LLVM_IAS=1 defconfig
-
-      - name: Generate kernel release file
-        working-directory: kernel-src
-        env:
-          ARCH: arm64
-          CROSS_COMPILE: aarch64-linux-gnu-
-          LLVM: 1
-          LLVM_IAS: 1
-        run: |
-          echo "4.19.157-$(git rev-parse --short HEAD)-dirty" > include/config/kernel.release
-          echo "Created kernel.release: $(cat include/config/kernel.release)"
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang LLVM=1 LLVM_IAS=1 defconfig
 
       - name: Generate kernel config headers
         working-directory: kernel-src
         env:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
-          LLVM: 0
+          CC: clang
+          LLVM: 1
+          LLVM_IAS: 1
         run: |
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=0 olddefconfig
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang LLVM=1 LLVM_IAS=1 olddefconfig
 
       - name: Build modpost tool
         working-directory: kernel-src
         env:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
-          LLVM: 0
+          CC: clang
+          LLVM: 1
+          LLVM_IAS: 1
         run: |
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=0 scripts
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang LLVM=1 LLVM_IAS=1 scripts
 
       - name: Build hello_driver module
         working-directory: kernel-src
         env:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
-          LLVM: 0
+          CC: clang
+          LLVM: 1
+          LLVM_IAS: 1
         run: |
           make -C hello_driver modules
 
@@ -138,23 +134,25 @@ jobs:
         env:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
+          CC: clang
           LLVM: 1
           LLVM_IAS: 1
         run: |
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=1 LLVM_IAS=1 defconfig
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang LLVM=1 LLVM_IAS=1 defconfig
 
       - name: Build kernel (arm64)
         working-directory: kernel-src
         env:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
+          CC: clang
           LLVM: 1
           LLVM_IAS: 1
         run: |
           make -j$(nproc) \
                ARCH=arm64 \
                CROSS_COMPILE=aarch64-linux-gnu- \
-               LLVM=1 LLVM_IAS=1 \
+               CC=clang LLVM=1 LLVM_IAS=1 \
                Image dtbs modules
         timeout-minutes: 120
 
@@ -198,51 +196,47 @@ jobs:
         env:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
+          CC: clang
           LLVM: 1
           LLVM_IAS: 1
         run: |
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=1 LLVM_IAS=1 defconfig
-
-      - name: Generate kernel release file
-        working-directory: kernel-src
-        env:
-          ARCH: arm64
-          CROSS_COMPILE: aarch64-linux-gnu-
-          LLVM: 1
-          LLVM_IAS: 1
-        run: |
-          echo "4.19.157-$(git rev-parse --short HEAD)-dirty" > include/config/kernel.release
-          echo "Created kernel.release: $(cat include/config/kernel.release)"
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang LLVM=1 LLVM_IAS=1 defconfig
 
       - name: Generate kernel config headers
         working-directory: kernel-src
         env:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
-          LLVM: 0
+          CC: clang
+          LLVM: 1
+          LLVM_IAS: 1
         run: |
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=0 olddefconfig
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang LLVM=1 LLVM_IAS=1 olddefconfig
 
       - name: Build modpost tool
         working-directory: kernel-src
         env:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
-          LLVM: 0
+          CC: clang
+          LLVM: 1
+          LLVM_IAS: 1
         run: |
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=0 scripts
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang LLVM=1 LLVM_IAS=1 scripts
 
       - name: Build all modules
         working-directory: kernel-src
         env:
           ARCH: arm64
           CROSS_COMPILE: aarch64-linux-gnu-
-          LLVM: 0
+          CC: clang
+          LLVM: 1
+          LLVM_IAS: 1
         run: |
           make -j$(nproc) \
                ARCH=arm64 \
                CROSS_COMPILE=aarch64-linux-gnu- \
-               LLVM=0 \
+               CC=clang LLVM=1 LLVM_IAS=1 \
                modules
         timeout-minutes: 90
 
