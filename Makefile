@@ -386,6 +386,10 @@ KBUILD_HOSTLDLIBS   := $(HOST_LFS_LIBS) $(HOSTLDLIBS)
 
 # Make variables (CC, etc...)
 CPP		= $(CC) -E
+# Set default CROSS_COMPILE if not specified (for ARM64 cross-compilation)
+ifneq ($(findstring aarch64,$(CROSS_COMPILE)$(ARCH)),)
+override CROSS_COMPILE := $(if $(CROSS_COMPILE),$(CROSS_COMPILE),aarch64-linux-gnu-)
+endif
 # Set REAL_CC before LLVM check so it's always available
 REAL_CC		= $(CROSS_COMPILE)gcc
 ifneq ($(LLVM),)
