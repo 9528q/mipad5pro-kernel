@@ -79,7 +79,7 @@ jobs:
           LLVM: 1
           LLVM_IAS: 1
         run: |
-          make -C hello_driver modules
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang LLVM=1 LLVM_IAS=1 M=hello_driver modules
 
       - name: Verify .ko file
         working-directory: kernel-src
@@ -237,7 +237,7 @@ jobs:
                ARCH=arm64 \
                CROSS_COMPILE=aarch64-linux-gnu- \
                CC=clang LLVM=1 LLVM_IAS=1 \
-               modules
+               M=hello_driver modules
         timeout-minutes: 90
 
       - name: Collect .ko files
