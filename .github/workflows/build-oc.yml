@@ -33,10 +33,15 @@ jobs:
         mkdir -p out
         echo "=== OC patch: $(grep -c 'OC patch' drivers/gpu/msm/kgsl_gmu.c) ==="
         cp arch/arm64/configs/vendor/kona_defconfig out/.config
-        # 关掉仓库 WIP 状态的 focaltech 触摸驱动（内部结构体不一致）
+        # 关 focaltech（WIP 状态）+ 关 FTRACE（Clang+LLD 的 __mcount_loc 重定位不支持）
         ./scripts/config --file out/.config \
           -d TOUCHSCREEN_FTS -d TOUCHSCREEN_FOCALTECH \
-          -d FTS_TOUCH -d FOCALTECH_TOUCH 2>&1 | tail -2
+          -d FTRACE -d FUNCTION_TRACER -d DYNAMIC_FTRACE \
+          -d FUNCTION_GRAPH_TRACER -d STACK_TRACER \
+          -d FTRACE_SYSCALLS -d SCHED_TRACER -d IRQSOFF_TRACER \
+          -d PREEMPT_TRACER -d HWLAT_TRACER -d MMIOTRACE \
+          -d TRACER_SNAPSHOT -d UPROBE_EVENTS -d KPROBE_EVENTS \
+          -d FTRACE_MCOUNT_RECORD -d HAVE_FTRACE_MCOUNT_RECORD 2>&1 | tail -2
         make O=out ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu- olddefconfig > /tmp/cfg.log 2>&1
         echo "olddefconfig_rc=$?"
         make -j$(nproc) O=out ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu- \
@@ -44,7 +49,7 @@ jobs:
           Image.gz > /tmp/build.log 2>&1
         echo "BUILD_RC=$?"
         echo "=== errors ==="
-        grep -E "error:|Error [0-9]|fatal" /tmp/build.log | head -20
+        grep -E "error:|Error [0-9]|fatal|dangerous relocation" /tmp/build.log | head -15
         mkdir -p ../package
         cp /tmp/build.log /tmp/cfg.log ../package/ 2>/dev/null
         cp out/arch/arm64/boot/Image.gz ../package/ 2>/dev/null
