@@ -32,21 +32,13 @@ jobs:
         export CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-
         mkdir -p out
         echo "=== OC patch: $(grep -c 'OC patch' drivers/gpu/msm/kgsl_gmu.c) ==="
-        echo "=== available defconfigs ==="
-        ls arch/arm64/configs/vendor/ | head -20
-        # 正确路径：vendor/kona_defconfig
-        make O=out ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu- vendor/kona_defconfig > /tmp/cfg.log 2>&1
-        RC=$?
-        echo "defconfig_rc=$RC"
-        tail -5 /tmp/cfg.log
-        if [ ! -f out/.config ]; then
-          echo "!! out/.config 未生成，尝试直接拷贝"
-          cp arch/arm64/configs/vendor/kona_defconfig out/.config
-          make O=out ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu- olddefconfig > /tmp/cfg2.log 2>&1
-          echo "olddefconfig_rc=$?"
-          tail -5 /tmp/cfg2.log
-        fi
-        echo "config exists: $(test -f out/.config && echo YES || echo NO)"
+        cp arch/arm64/configs/vendor/kona_defconfig out/.config
+        # 关掉仓库 WIP 状态的 focaltech 触摸驱动（内部结构体不一致）
+        ./scripts/config --file out/.config \
+          -d TOUCHSCREEN_FTS -d TOUCHSCREEN_FOCALTECH \
+          -d FTS_TOUCH -d FOCALTECH_TOUCH 2>&1 | tail -2
+        make O=out ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu- olddefconfig > /tmp/cfg.log 2>&1
+        echo "olddefconfig_rc=$?"
         make -j$(nproc) O=out ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu- \
           CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
           Image.gz > /tmp/build.log 2>&1
