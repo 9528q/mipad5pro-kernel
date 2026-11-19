@@ -665,9 +665,21 @@ static int setup_volt_dependency_tbl(uint32_t *votes,
 			}
 		}
 
-		/* If we did not find a matching VLVL level then abort */
-		if (!found_match)
-			return -EINVAL;
+		/*
+		 * OC patch: if the requested VLVL exceeds the highest level in
+		 * the primary rail table (happens when the GPU top frequency is
+		 * overclocked past the stock OPP voltage), clamp to the highest
+		 * available level instead of failing the whole GMU init.
+		 */
+		if (!found_match) {
+			pr_warn("kgsl-gmu: vlvl %u > pri_rail max %u, clamp (OC)\n",
+				vlvl[i],
+				pri_rail->num ? pri_rail->val[pri_rail->num - 1] : 0);
+			cur_vlvl = pri_rail->num ?
+				pri_rail->val[pri_rail->num - 1] : 0;
+			found_match = true;
+			k = pri_rail->num ? pri_rail->num - 1 : 0;
+		}
 
 		/*
 		 * Look for a secondary rail index whose VLVL value
