@@ -42,15 +42,18 @@ jobs:
           -d UPROBE_EVENTS -d KPROBE_EVENTS \
           -d FTRACE_MCOUNT_RECORD -d HAVE_FTRACE_MCOUNT_RECORD \
           -d MODULE_REL_CRCS -d MODVERSIONS -d DEBUG_INFO_BTF \
-          -d GSI -d MSM_GSI 2>&1 | tail -2
+          -d GSI -d MSM_GSI \
+          -e RELOCATABLE -e ARM64_VA_BITS_48 -e ARM64_VA_BITS_39 2>&1 | tail -2
         make O=out ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu- olddefconfig > /tmp/cfg.log 2>&1
         echo "olddefconfig_rc=$?"
+        # 用 -mcmodel=large 避免大镜像重定位溢出
         make -j$(nproc) O=out ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu- \
           CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+          KAFLAGS="-mcmodel=large" KCFLAGS="-mcmodel=large" \
           Image.gz > /tmp/build.log 2>&1
         echo "BUILD_RC=$?"
         echo "=== errors ==="
-        grep -E "error:|Error [0-9]|fatal|dangerous relocation" /tmp/build.log | head -12
+        grep -E "error:|Error [0-9]|fatal|relocation" /tmp/build.log | head -10
         mkdir -p ../package
         cp /tmp/build.log /tmp/cfg.log ../package/ 2>/dev/null
         cp out/arch/arm64/boot/Image.gz ../package/ 2>/dev/null
