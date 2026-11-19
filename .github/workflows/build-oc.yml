@@ -33,11 +33,10 @@ jobs:
         mkdir -p out
         echo "=== OC patch: $(grep -c 'OC patch' drivers/gpu/msm/kgsl_gmu.c) ==="
         cp arch/arm64/configs/elish_device_defconfig out/.config
-        # 关掉设备 canary 内核有、公开源码没有的选项
         ./scripts/config --file out/.config \
-          -d STACKTRACE -d STACK_TRACER -d SCHED_STACK_END_CHECK \
-          -d LATENCYTOP -d DEBUG_STACK_USAGE -d STACK_VALIDATION \
-          -d SECURITY_STACKLEAK -d VMAP_STACK -d DEBUG_INFO \
+          -e STACKTRACE -e FRAME_POINTER \
+          -d SCHED_STACK_END_CHECK -d LATENCYTOP -d DEBUG_STACK_USAGE \
+          -d STACK_VALIDATION -d SECURITY_STACKLEAK \
           -d SND_SOC_MSM_CIRRUS -d SND_SOC_WCD_CIRRUS \
           -d KASAN -d KCSAN -d UBSAN \
           -d HID_WACOM -d HID_WACOM_BATTERY -d TABLET_USB_WACOM \
@@ -45,10 +44,12 @@ jobs:
           -e MODULES 2>&1 | tail -3
         make O=out ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu- olddefconfig > /tmp/cfg.log 2>&1
         echo "olddefconfig_rc=$?"
+        echo "STACKTRACE=$(grep -c '^CONFIG_STACKTRACE=y' out/.config)"
         make -j$(nproc) O=out ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu- \
           CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
           Image.gz > /tmp/build.log 2>&1
         echo "BUILD_RC=$?"
+        echo "=== errors ==="
         grep -E "error:|Error [0-9]|fatal" /tmp/build.log | head -20
         mkdir -p ../package
         cp /tmp/build.log /tmp/cfg.log ../package/ 2>/dev/null
