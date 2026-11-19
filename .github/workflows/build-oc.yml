@@ -23,7 +23,7 @@ jobs:
         git clone --depth 1 https://github.com/kdrag0n/proton-clang.git toolchain
         toolchain/bin/clang --version | head -2
 
-    - name: Build
+    - name: Build with kona_defconfig
       working-directory: kernel
       run: |
         set +e
@@ -31,26 +31,18 @@ jobs:
         export ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu-
         export CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-
         mkdir -p out
-        echo "=== OC patch: $(grep -c 'OC patch' drivers/gpu/msm/kgsl_gmu.c) ==="
-        cp arch/arm64/configs/elish_device_defconfig out/.config
-        ./scripts/config --file out/.config \
-          -e STACKTRACE -e FRAME_POINTER \
-          -d SCHED_STACK_END_CHECK -d LATENCYTOP -d DEBUG_STACK_USAGE \
-          -d STACK_VALIDATION -d SECURITY_STACKLEAK \
-          -d SND_SOC_MSM_CIRRUS -d SND_SOC_WCD_CIRRUS \
-          -d KASAN -d KCSAN -d UBSAN \
-          -d HID_WACOM -d HID_WACOM_BATTERY -d TABLET_USB_WACOM \
-          -d TOUCHSCREEN_WACOM_I2C -d TOUCHSCREEN_WACOM_W8001 \
-          -e MODULES 2>&1 | tail -3
-        make O=out ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu- olddefconfig > /tmp/cfg.log 2>&1
-        echo "olddefconfig_rc=$?"
-        echo "STACKTRACE=$(grep -c '^CONFIG_STACKTRACE=y' out/.config)"
+        echo "=== OC patch count: $(grep -c 'OC patch' drivers/gpu/msm/kgsl_gmu.c) ==="
+        make O=out ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu- kona_defconfig > /tmp/cfg.log 2>&1
+        echo "defconfig_rc=$?"
+        tail -5 /tmp/cfg.log
         make -j$(nproc) O=out ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu- \
           CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
           Image.gz > /tmp/build.log 2>&1
         echo "BUILD_RC=$?"
         echo "=== errors ==="
         grep -E "error:|Error [0-9]|fatal" /tmp/build.log | head -20
+        echo "=== tail ==="
+        tail -10 /tmp/build.log
         mkdir -p ../package
         cp /tmp/build.log /tmp/cfg.log ../package/ 2>/dev/null
         cp out/arch/arm64/boot/Image.gz ../package/ 2>/dev/null
