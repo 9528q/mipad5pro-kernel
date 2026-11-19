@@ -1,0 +1,58 @@
+name: Build elish OC Kernel
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        path: kernel
+        fetch-depth: 1
+
+    - name: Install deps
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq bc bison flex libssl-dev libncurses5-dev \
+          build-essential cpio gzip curl wget git zip libelf-dev 2>&1 | tail -2
+
+    - name: Clone Proton Clang 12
+      run: |
+        git clone --depth 1 https://github.com/kdrag0n/proton-clang.git toolchain
+        toolchain/bin/clang --version | head -2
+
+    - name: Build
+      working-directory: kernel
+      run: |
+        set +e
+        export PATH="$GITHUB_WORKSPACE/toolchain/bin:$PATH"
+        export ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu-
+        export CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+        mkdir -p out
+        echo "=== OC patch count: $(grep -c 'OC patch' drivers/gpu/msm/kgsl_gmu.c) ==="
+        cp arch/arm64/configs/elish_device_defconfig out/.config
+        make O=out ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu- olddefconfig > /tmp/cfg.log 2>&1
+        echo "olddefconfig_rc=$?"
+        tail -5 /tmp/cfg.log
+        make -j$(nproc) O=out ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu- \
+          CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+          Image.gz > /tmp/build.log 2>&1
+        echo "BUILD_RC=$?"
+        grep -E "error:|Error [0-9]|fatal" /tmp/build.log | head -30
+        mkdir -p ../package
+        cp /tmp/build.log ../package/ 2>/dev/null
+        cp /tmp/cfg.log ../package/ 2>/dev/null
+        cp out/arch/arm64/boot/Image.gz ../package/ 2>/dev/null
+        cp out/arch/arm64/boot/Image ../package/ 2>/dev/null
+        cp out/.config ../package/built.config 2>/dev/null
+        ls -lah ../package/
+        exit 0
+
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: elish-oc
+        path: package/
+        if-no-files-found: warn
